@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "folder",
+    "size": 4096,
+    "created": 1754556982.102436
+  },
+  "EndPoint.py": {
+    "type": "file",
+    "size": 2144,
+    "created": 1754557625.6410239,
+    "content": "import os\nimport json\nimport time\nfrom pathlib import Path\nfrom datetime import datetime\nfrom cryptography.fernet import Fernet\n\n# --- SETTINGS ---\nSTATE_FILE = Path(\"data/last_state.json\")\nENCRYPTED_FILE = Path(\"data/encrypted_result.bin\")\nKEY_FILE = Path(\"data/fernet.key\")\nSCAN_FOLDER = Path(__file__).parent.resolve()\n\n# --- Ensure data folder exists ---\nPath(\"data\").mkdir(exist_ok=True)\n\n# --- Key Generation / Load ---\nif not KEY_FILE.exists():\n    key = Fernet.generate_key()\n    KEY_FILE.write_bytes(key)\nelse:\n    key = KEY_FILE.read_bytes()\n\nfernet = Fernet(key)\n\n# --- Helper to get directory snapshot ---\ndef get_snapshot(folder: Path):\n    snapshot = {}\n    for item in folder.iterdir():\n        info = {\n            \"type\": \"file\" if item.is_file() else \"folder\",\n            \"size\": item.stat().st_size,\n            \"created\": item.stat().st_ctime,\n        }\n        if item.is_file():\n            try:\n                info[\"content\"] = item.read_text(encoding=\"utf-8\", errors=\"ignore\")\n            except Exception as e:\n                info[\"content\"] = f\"<Unreadable: {e}>\"\n        snapshot[item.name] = info\n    return snapshot\n\n# --- Load old state if exists ---\nif STATE_FILE.exists():\n    with open(STATE_FILE, \"r\") as f:\n        old_snapshot = json.load(f)\nelse:\n    old_snapshot = {}\n\n# --- Get current snapshot ---\ncurrent_snapshot = get_snapshot(SCAN_FOLDER)\n\n# --- Detect new items ---\nnew_items = {}\nfor name, info in current_snapshot.items():\n    if name not in old_snapshot:\n        new_items[name] = info\n\n# --- Encrypt the new item info ---\nif new_items:\n    json_data = json.dumps(new_items, indent=2).encode(\"utf-8\")\n    encrypted = fernet.encrypt(json_data)\n    ENCRYPTED_FILE.write_bytes(encrypted)\n    print(f\"\ud83d\udd10 Encrypted {len(new_items)} new item(s) and saved to: {ENCRYPTED_FILE}\")\nelse:\n    print(\"\u2705 No new files or folders since last run.\")\n\n# --- Save current state for next comparison ---\nwith open(STATE_FILE, \"w\") as f:\n    json.dump(current_snapshot, f, indent=2)\n\n# --- Done ---\nprint(\"\u2705 Directory check complete.\")\n"
+  },
+  "fuck": {
+    "type": "folder",
+    "size": 0,
+    "created": 1754555155.0775113
+  },
+  "hello.txt": {
+    "type": "file",
+    "size": 14,
+    "created": 1754558234.912912,
+    "content": "fdqsdfsdfgsfdg"
+  },
+  "StartPoint.py": {
+    "type": "file",
+    "size": 1167,
+    "created": 1754554266.0713637,
+    "content": "import os\nimport json\nimport time\nfrom pathlib import Path\nfrom datetime import datetime\n# 1. Set target folder\ntarget_folder = Path(__file__).parent.resolve()\n# 2. Start timer\nstart = time.time()\n\n# 3. Get all contents\nall_items = list(target_folder.iterdir())\n\n# 4. Separate files and folders\nfiles = [item.name for item in all_items if item.is_file()]\nfolders = [item.name for item in all_items if item.is_dir()]\n\n# 5. Print results\nprint(\"All items:\", [item.name for item in all_items])\nprint(\"Folders only:\", folders)\nprint(\"Files only:\", files)\n\n# 6. Wait 1 second\ntime.sleep(1)\n\n# 7. Create \"data\" directory if it doesn't exist\ndata_dir = Path(\"data\")\ndata_dir.mkdir(exist_ok=True)\n\n# 8. Prepare data\nresult = {\n    \"all_items\": [item.name for item in all_items],\n    \"folders\": folders,\n    \"files\": files\n}\n\n# 9. Save JSON with timestamp\ntimestamp = datetime.now().strftime(\"%Y-%m-%d_%H-%M-%S\")\njson_path = data_dir / f\"folder_content_{timestamp}.json\"\nwith open(json_path, \"w\") as f:\n    json.dump(result, f, indent=2)\n\n# 10. Print finish time\nend = time.time()\nprint(f\"\u2705 Finish in {end - start:.3f} seconds\")\n"
+  }
+}

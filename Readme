@@ -1,0 +1,24 @@
+# 📡 PC-to-Phone File Sync
+
+A simple Python project that monitors files and folders on your PC and syncs them to your Android phone using a local Wi-Fi Flask server.
+
+---
+
+## 📦 Features
+
+- Detects new or modified files
+- Sends updated files via HTTP POST
+- Creates missing folders remotely
+- Saves everything locally on the phone in the script's own folder
+- Simple and fast local network sync
+
+---
+
+## 🖥 PC Sender Script
+
+### 🔧 Requirements
+
+Install the required Python package:
+
+```bash
+pip install -r requirements.txt
