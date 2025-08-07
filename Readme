@@ -1,3 +1,18 @@
+Absolutely! Here's a complete **GitHub-style `README.md`** that documents your full PC ↔️ Phone sync system, including:
+
+* 🖥 PC monitor script (`MonitorSend.py`)
+* 📱 Phone Flask receiver script
+* How they work **together**
+* Setup instructions
+* Requirements
+* Folder structure
+* Next steps
+
+---
+
+### 📄 `README.md`
+
+````markdown
 # 🔄 PC ↔️ Phone File Sync via Wi-Fi
 
 A minimal Python-based system to **monitor files on your PC** and **sync them automatically to your Android phone** over a local Wi-Fi network using a Flask API server.
@@ -28,3 +43,157 @@ A minimal Python-based system to **monitor files on your PC** and **sync them au
 📂 Phone/
 └── phone_server.py       # Flask API receiver
     └── received_files/   # Synced data saved here
+````
+
+---
+
+## ⚙️ Requirements
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+`requirements.txt` contains:
+
+```
+requests
+flask
+```
+
+---
+
+## 🖥 PC Script – `MonitorSend.py`
+
+This script:
+
+* Scans the current folder
+* Detects new or modified files
+* Sends them via HTTP to your phone
+* Creates folders remotely if missing
+
+### 🔧 Configuration
+
+Set the IP of your phone in the script:
+
+```python
+API_URL = "http://192.168.100.6:5000/upload"  # Replace with your phone IP
+FOLDER_URL = "http://192.168.100.6:5000/folder"
+```
+
+### ▶️ Run it:
+
+```bash
+python MonitorSend.py
+```
+
+---
+
+## 📱 Phone Script – `phone_server.py`
+
+This script:
+
+* Runs a Flask server
+* Accepts files and folders
+* Saves everything in `received_files/` where the script lives
+
+### ▶️ Run it (on your phone):
+
+Install **Pydroid 3** or any mobile Python environment.
+
+Then run:
+
+```python
+from flask import Flask, request
+from pathlib import Path
+
+app = Flask(__name__)
+save_path = Path("received_files")
+save_path.mkdir(exist_ok=True)
+
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    uploaded_file = request.files['file']
+    filename = uploaded_file.filename
+    full_path = save_path / filename
+    uploaded_file.save(full_path)
+    return f"✅ File saved: {filename}", 200
+
+@app.route("/folder", methods=["POST"])
+def create_folder():
+    foldername = request.form.get("foldername")
+    if foldername:
+        (save_path / foldername).mkdir(parents=True, exist_ok=True)
+        return f"📁 Folder created: {foldername}", 200
+    return "❌ No foldername provided", 400
+
+app.run(host="0.0.0.0", port=5000)
+```
+
+You'll see:
+
+```bash
+* Running on http://192.168.100.6:5000
+```
+
+Use that IP in the PC script.
+
+---
+
+## 🔄 How It Works Together
+
+1. Phone runs `phone_server.py` (waits for uploads)
+2. PC runs `MonitorSend.py` (monitors files)
+3. When:
+
+   * New file → sent to `/upload`
+   * New/updated folder → POST to `/folder`
+4. Phone saves all files in `received_files/`
+
+---
+
+## ✅ Examples
+
+### File detection and sync:
+
+```bash
+📦 1 file(s) to send.
+📤 Sent: hello.txt
+✅ Done at 14:22:18
+```
+
+### Folder creation:
+
+```bash
+📁 Created folder: notes
+```
+
+---
+
+## 📌 To Do
+
+* [ ] Sync subfolders recursively
+* [ ] Add delete sync (optional)
+* [ ] Encrypt files in transit
+* [ ] Auto-start server on phone boot
+* [ ] GUI frontend
+
+---
+
+## 📜 License
+
+MIT License — free to use, modify, and distribute.
+
+---
+
+## ❤️ Credits
+
+Built with love for offline users who like full control over their files.
+
+```
+
+---
+
+Would you also like me to generate the `requirements.txt` and `.gitignore`, or package this as a ZIP you can upload to GitHub directly?
+```
